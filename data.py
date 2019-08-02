@@ -71,4 +71,6 @@ def get_data(asset, dt, count, filename):
 
 # download training, testing data
 get_data("USD_CAD", "2014-01-01", 30000, "USD_CAD_train.tsv")
+get_data("USD_CHF", "2014-01-01", 30000, "USD_CHF_train.tsv")
 get_data("USD_CAD", "2019-01-01", 2000, "USD_CAD_test.tsv")
+get_data("USD_CHF", "2019-01-01", 2000, "USD_CHF_test.tsv")
