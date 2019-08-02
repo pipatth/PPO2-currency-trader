@@ -31,9 +31,7 @@ server = app.server
 def next_step(asset):
     # predict
     action, _states = model.predict(asset_data[asset]["obs"])
-    asset_data[asset]["obs"], rewards, done, info = asset_data[asset]["env"].step(
-        action
-    )
+    asset_data[asset]["obs"], _, _, _ = asset_data[asset]["env"].step(action)
     return
 
 
@@ -552,4 +550,4 @@ for asset in assets:
     )(generate_figure_buysell_callback(asset))
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server(debug=False)
