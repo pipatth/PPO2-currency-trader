@@ -11,6 +11,10 @@ https://github.com/notadamking/RLTrader for gym environment codes, tutorials, an
 https://dash-gallery.plotly.host/Portal/ for Dash template
 
 1. Install dependencies
+- Make sure you have libopenmpi-dev 
+```
+$ sudo apt install libopenmpi-dev
+```
 - If using GPU
 ```
 $ pip install -r requirements-gpu.txt
@@ -38,7 +42,7 @@ $ python data.py
 ```
 4. Train models using PPO2. For example,
 ```
-$ python model.py --symbol USD_CAD --n 10000
+$ python model.py --symbol EUR_USD --n 10000
 ```
 5. Visualize agent training
 ```
