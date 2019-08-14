@@ -77,7 +77,7 @@ def train(asset, n):
 # run
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--symbol", help="asset symbol e.g. USD_CAD", default="USD_CAD")
+    parser.add_argument("--symbol", help="asset symbol e.g. EUR_USD", default="EUR_USD")
     parser.add_argument(
         "--n", help="number of sessions e.g. 1000", default=1000, type=int
     )
