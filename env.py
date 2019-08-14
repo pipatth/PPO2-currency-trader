@@ -123,7 +123,7 @@ class TradeEnv(gym.Env):
         return abs(self._get_position_value()) * self.margin_req
 
     # getter current nav. nav = balance + unrealized p/l using current bid or ask
-    def _get_nav(self):
+    def get_nav(self):
         value_open = sum(
             [unit * price for unit, price in zip(self.units_open, self.prices_open)]
         )
@@ -209,7 +209,7 @@ class TradeEnv(gym.Env):
                 self._close_pos(unit_to_close, price)
             self._reset_pos()
         obs = self._next_obs()
-        reward = self._get_nav()
+        reward = self.get_nav()
         done = self._is_closeout()
 
         # append next price to pr_hist
@@ -224,7 +224,7 @@ class TradeEnv(gym.Env):
     def _take_action(self, action, pr_row):
         action_type = action[0]
         proportion = action[1] / 10
-        avail = self._get_nav() - self._get_margin_used()  # margin available to use
+        avail = self.get_nav() - self._get_margin_used()  # margin available to use
         unit_filled = 0
         price = 0
         # take pos
@@ -260,15 +260,15 @@ class TradeEnv(gym.Env):
             unit_long = abs(unit_filled)
             unit_short = 0
         elif unit_filled < 0:
-            unit_long = abs(unit_filled)
-            unit_short = 0
+            unit_long = 0
+            unit_short = abs(unit_filled)
         else:
             unit_long = 0
             unit_short = 0
         df_ = pd.DataFrame(
             [
                 [
-                    self._get_nav(),
+                    self.get_nav(),
                     unit_long,
                     unit_long * price,
                     unit_short,

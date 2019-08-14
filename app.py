@@ -10,7 +10,7 @@ from plotly import tools
 from empyrical import max_drawdown
 from model import load_env_model
 
-assets = ["USD_CAD", "USD_CHF"]
+assets = ["EUR_USD", "GBP_USD"]
 locale.setlocale(locale.LC_ALL, "")
 
 # load environment and model
@@ -30,7 +30,9 @@ server = app.server
 # take action
 def next_step(asset):
     # predict
-    action, _states = model.predict(asset_data[asset]["obs"])
+    action, _states = asset_data[asset]["model"].predict(asset_data[asset]["obs"])
+    print(asset_data[asset]["obs"][0][5])
+    print(asset, action)
     asset_data[asset]["obs"], _, _, _ = asset_data[asset]["env"].step(action)
     return
 
@@ -131,14 +133,14 @@ def get_top_bar(asset_data):
     for asset in assets:
         env = asset_data[asset]["env"]
         initial += env.envs[0].initial
-        nw += env.envs[0].net_worth
-        l_nw.append(env.envs[0].get_summary()["net_worth"])
+        nw += env.envs[0].get_nav()
+        l_nw.append(env.envs[0].get_summary()["nav"])
     open_pl = nw - initial
     s_nw = pd.concat(l_nw, axis=1).sum(axis=1)
     s_ret = (s_nw.diff().fillna(0) / s_nw.shift(1)).fillna(0)
     return [
         get_top_bar_cell("Initial Capital", np.round(initial, 2)),
-        get_top_bar_cell("Net Worth", np.round(nw, 2)),
+        get_top_bar_cell("NAV", np.round(nw, 2)),
         get_top_bar_cell("Open P/L", np.round(open_pl, 2)),
         get_top_bar_cell("% Gain", open_pl / initial, fmt="pct"),
         get_top_bar_cell("% Max Drawdown", max_drawdown(s_ret), fmt="pct"),
@@ -154,7 +156,7 @@ def get_position(asset_data):
         "Unit held",
         "Cost",
         "Initial Capital",
-        "Net Worth",
+        "NAV",
         "Open P/L",
         "% Gain",
         "% Max Drawdown",
@@ -167,14 +169,16 @@ def get_position(asset_data):
         summary = env.envs[0].get_summary()
         row = {
             "Symbol": asset,
-            "Unit held": summary["unit_bought"].sum() - summary["unit_sold"].sum(),
-            "Cost": get_local_format(summary["cost"].sum() - summary["sales"].sum()),
+            "Unit held": summary["unit_long"].sum() - summary["unit_short"].sum(),
+            "Value": get_local_format(
+                summary["value_long"].sum() - summary["value_short"].sum()
+            ),
             "Initial Capital": get_local_format(env.envs[0].initial),
-            "Net Worth": get_local_format(env.envs[0].net_worth),
-            "Open P/L": get_local_format(env.envs[0].net_worth - env.envs[0].initial),
+            "NAV": get_local_format(env.envs[0].get_nav()),
+            "Open P/L": get_local_format(env.envs[0].get_nav() - env.envs[0].initial),
             "% Gain": str(
                 np.round(
-                    (env.envs[0].net_worth - env.envs[0].initial)
+                    (env.envs[0].get_nav() - env.envs[0].initial)
                     / env.envs[0].initial
                     * 100,
                     2,
@@ -274,7 +278,7 @@ def get_fig_nw(asset, data, n_bar=50):
 
     # Add main trace (style) to figure
     type_trace = "area_trace"
-    fig.append_trace(eval(type_trace)(df.index, df["net_worth"]), 1, 1)
+    fig.append_trace(eval(type_trace)(df.index, df["nav"]), 1, 1)
     fig["layout"][
         "uirevision"
     ] = "The User is always right"  # Ensures zoom on graph is the same on update
@@ -306,8 +310,8 @@ def get_fig_buysell(asset, data, n_bar=50):
 
     # Add main trace (style) to figure
     type_trace = "bar_trace"
-    fig.append_trace(eval(type_trace)(df.index, df["sales"]), 1, 1)
-    fig.append_trace(eval(type_trace)(df.index, -df["cost"]), 1, 1)
+    fig.append_trace(eval(type_trace)(df.index, df["value_short"]), 1, 1)
+    fig.append_trace(eval(type_trace)(df.index, -df["value_long"]), 1, 1)
     fig["layout"][
         "uirevision"
     ] = "The User is always right"  # Ensures zoom on graph is the same on update
@@ -550,4 +554,4 @@ for asset in assets:
     )(generate_figure_buysell_callback(asset))
 
 if __name__ == "__main__":
-    app.run_server(debug=False)
+    app.run_server(debug=True)
